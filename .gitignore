@@ -36,6 +36,10 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
+# node js
+*/node_modules/
+package-lock.json
+
 # Unit test / coverage reports
 htmlcov/
 .tox/
