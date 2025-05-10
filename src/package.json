@@ -1,0 +1,20 @@
+{
+  "name": "projeto-web2-pt2",
+  "version": "1.0.0",
+  "description": "| [<img loading=\"lazy\" src=\"https://avatars.githubusercontent.com/u/106767229?s=400&u=d91f527c50979c457174cc70127a0411747c70e5&v=4\" width=115><br><sub>Nicolas Ferreira</sub>](https://github.com/Niccofs) | [<img loading=\"lazy\" src=\"https://avatars.githubusercontent.com/u/100231973?v=4\" width=115><br><sub>Rudhá Esmeraldo</sub>](https://github.com/rudhaesmeraldo) |\r | :---: | :---: |",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Niccofs/Projeto-Web2-pt2.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Niccofs/Projeto-Web2-pt2/issues"
+  },
+  "homepage": "https://github.com/Niccofs/Projeto-Web2-pt2#readme"
+}
