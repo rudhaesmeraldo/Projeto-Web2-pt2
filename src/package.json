@@ -20,6 +20,7 @@
   "homepage": "https://github.com/Niccofs/Projeto-Web2-pt2#readme",
   "dependencies": {
     "bcryptjs": "^3.0.2",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",

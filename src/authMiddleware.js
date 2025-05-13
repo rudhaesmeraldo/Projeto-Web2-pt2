@@ -13,7 +13,7 @@ function authMiddleware(req, res, next) {
     req.usuario = payload;
     next();
   } catch (err) {
-    res.status(401).json({ erro: 'Token expirado ou inválido' });
+    res.status(401).json({ erro: `Token ${token} expirado ou inválido` });
   }
 }
 
