@@ -1,32 +1,23 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const multer = require('multer'); 
-const path = require('path');
-const { users } = require('./users');
-const authMiddleware = require('./middlewares/authMiddleware');
-const restrictAccessMiddleware = require('./middlewares/restrictAccessMiddleware');
-const Laboratorio = require('./models/Laboratorio');
-const PDFDocument = require('pdfkit');
+const multer = require('multer');
+const axios = require('axios');
 const mongoose = require('mongoose');
-const fs = require('fs');
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // pasta onde os arquivos serão salvos
-  },
-  filename: (req, file, cb) => {
-    const nomeArquivo = Date.now() + path.extname(file.originalname);
-    cb(null, nomeArquivo);
-  }
-});
-
-const upload = multer({ storage });
-
+const PDFDocument = require('pdfkit');
+const { users } = require('./data/users');
+const authMiddleware = require('./authMiddleware');
+const restrictAccessMiddleware = require('./restrictAccessMiddleware');
+const Laboratorio = require('./models/Laboratorio');
 require('dotenv').config();
-var db_password = process.env.db_password || "admin"
 
-mongoose.connect(`mongodb+srv://admin:${db_password}@clusterweb2.oibcn39.mongodb.net/`, {
+const app = express();
+const PORT = process.env.PORT || 3000;
+const SECRET = process.env.JWT_SECRET || 'secret';
+const DB_PASSWORD = process.env.DB_PASSWORD;
+
+// Conexão com o MongoDB
+mongoose.connect(`mongodb+srv://admin:${DB_PASSWORD}@clusterweb2.oibcn39.mongodb.net/?retryWrites=true&w=majority`, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 }).then(() => {
@@ -35,21 +26,16 @@ mongoose.connect(`mongodb+srv://admin:${db_password}@clusterweb2.oibcn39.mongodb
   console.error('❌ Erro ao conectar ao MongoDB:', err);
 });
 
-
-const app = express();
+// Middlewares
 app.use(express.json());
-app.use(restrictAccessMiddleware); 
-app.use('/uploads', express.static('uploads'));
+app.use(restrictAccessMiddleware);
 
-const SECRET = 'secret';
-
-// Home
+// Rota raiz
 app.get('/', (req, res) => {
   res.send('🚀 Bem-vindo à API de Gerenciamento de Salas!');
 });
 
-
-// Rota para login
+// Rota de login
 app.post('/logar', async (req, res) => {
   const { email, senha } = req.body;
 
@@ -59,56 +45,34 @@ app.post('/logar', async (req, res) => {
   const senhaValida = await bcrypt.compare(senha, usuario.senha);
   if (!senhaValida) return res.status(401).json({ erro: 'Senha incorreta' });
 
-  const token = jwt.sign({ id: usuario.id, email: usuario.email }, SECRET, {
-    expiresIn: '1h',
-  });
-
+  const token = jwt.sign({ id: usuario.id, email: usuario.email }, SECRET, { expiresIn: '1h' });
   res.json({ token });
 });
 
-// Rota para cadastrar um novo laboratório
-// authMiddleware,
-app.post('/laboratorio/novo', upload.single('foto'), async (req, res) => {
+// Rota protegida: cadastrar laboratório
+app.post('/laboratorio/novo', authMiddleware, async (req, res) => {
   const { nome, descricao, capacidade } = req.body;
-  const foto = req.file ? req.file.path : null;
 
   if (!nome || !descricao || !capacidade) {
-    return res.status(400).json({ erro: 'Nome, descrição e capacidade são obrigatórios' });
+    return res.status(400).json({ erro: 'Todos os campos são obrigatórios (exceto foto)' });
   }
 
   try {
-    const novoLab = await Laboratorio.create({ nome, descricao, capacidade, foto });
-    res.status(201).json({ mensagem: 'Laboratório cadastrado com foto', laboratorio: novoLab });
+    const novoLab = await Laboratorio.create({ nome, descricao, capacidade });
+    res.status(201).json({ mensagem: 'Laboratório salvo no MongoDB', laboratorio: novoLab });
   } catch (err) {
     res.status(500).json({ erro: 'Erro ao salvar no banco de dados', detalhes: err.message });
   }
 });
 
-// DELETE /laboratorio/:id
-app.delete('/laboratorio/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const deletado = await Laboratorio.findByIdAndDelete(id);
-
-    if (!deletado) {
-      return res.status(404).json({ erro: 'Laboratório não encontrado' });
-    }
-
-    res.json({ mensagem: 'Laboratório deletado com sucesso' });
-  } catch (err) {
-    console.error('Erro ao excluir laboratório:', err);
-    res.status(500).json({ erro: 'Erro ao excluir laboratório' });
-  }
-});
-
-
-app.get('/laboratorio/relatorio', async (req, res) => {
+// Rota protegida: gerar relatório PDF
+app.get('/laboratorio/relatorio', authMiddleware, async (req, res) => {
   try {
     const laboratorios = await Laboratorio.find();
+    const doc = new PDFDocument({ margin: 30, size: 'A4' });
 
-    const doc = new PDFDocument();
+    res.setHeader('Content-Disposition', 'attachment; filename="relatorio_laboratorios.pdf"');
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=relatorio.pdf');
 
     doc.pipe(res);
 
@@ -116,37 +80,31 @@ app.get('/laboratorio/relatorio', async (req, res) => {
     doc.moveDown();
 
     for (const lab of laboratorios) {
-      doc.fontSize(12).text(`Id: ${lab.id}`)
       doc.fontSize(14).text(`Nome: ${lab.nome}`);
       doc.fontSize(12).text(`Descrição: ${lab.descricao}`);
       doc.text(`Capacidade: ${lab.capacidade}`);
-      doc.text('Foto:');
 
-      // Caminho absoluto da imagem
       if (lab.foto) {
-        const caminhoImagem = path.resolve(__dirname, lab.foto);
-        if (fs.existsSync(caminhoImagem)) {
-          doc.image(caminhoImagem, {
-            width: 200,
-            fit: [250, 250],
-            align: 'left'
-          });
-        } else {
-          doc.text('[Imagem não encontrada]');
+        try {
+          const response = await axios.get(lab.foto, { responseType: 'arraybuffer' });
+          const imageBuffer = Buffer.from(response.data, 'base64');
+          doc.image(imageBuffer, { fit: [250, 150] });
+        } catch (error) {
+          doc.text('Erro ao carregar imagem');
         }
       }
 
-      // Linha divisória
-      doc.moveDown();
-      doc.text('-------------------------------');
-      doc.moveDown();
+      doc.moveDown(2);
     }
 
     doc.end();
   } catch (err) {
-    console.error('Erro ao gerar relatório:', err);
-    res.status(500).json({ erro: 'Erro ao gerar relatório' });
+    console.error(err);
+    res.status(500).json({ erro: 'Erro ao gerar o relatório', detalhes: err.message });
   }
 });
 
-//app.listen(3000, () => console.log('Servidor rodando na porta 3000'));
+// Inicialização do servidor
+app.listen(PORT, () => {
+  console.log(`🚀 Servidor rodando na porta ${PORT}`);
+});
