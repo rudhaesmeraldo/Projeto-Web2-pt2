@@ -1,8 +1,8 @@
 # Atividade N1B Web 2 - API sistema de gerenciamento de salas
 
 ## 👥 Equipe
-| [<img loading="lazy" src="https://avatars.githubusercontent.com/u/106767229?s=400&u=d91f527c50979c457174cc70127a0411747c70e5&v=4" width=115><br><sub>Nicolas Ferreira</sub>](https://github.com/Niccofs) | [<img loading="lazy" src="https://avatars.githubusercontent.com/u/100231973?v=4" width=115><br><sub>Rudhá Esmeraldo</sub>](https://github.com/rudhaesmeraldo) |
-| :---: | :---: |
+| [<img loading="lazy" src="https://avatars.githubusercontent.com/u/106767229?s=400&u=d91f527c50979c457174cc70127a0411747c70e5&v=4" width=115><br><sub>Nicolas Ferreira</sub>](https://github.com/Niccofs) | [<img loading="lazy" src="https://avatars.githubusercontent.com/u/100231973?v=4" width=115><br><sub>Rudhá Esmeraldo</sub>](https://github.com/rudhaesmeraldo) | [<img loading="lazy" src="https://avatars.githubusercontent.com/u/90151294?v=4" width=115><br><sub>Hívina Yanna</sub>](https://github.com/hivinayanna) |
+| :---: | :---: | :---: |
 
 ## Estrutura de Pastas do Código
 
@@ -10,7 +10,15 @@ A estrutura de pastas é organizada para refletir a separação de responsabilid
 
 ```
 src/
-  ├── assets/
+  ├── models/
+      └── Laboratorio.js
+  ├── middlewares/
+      ├── authMiddleware.js
+      └── restrictAccessMiddleware.js
+  ├── index.js
+  ├── laboratorioController.js
+  ├── package.json
+  ├── users.js  
 ```
 
 ## 🔨 Funcionalidades do Projeto

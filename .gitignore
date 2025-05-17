@@ -37,7 +37,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # node js
-*/node_modules/
+node_modules/
 package-lock.json
 
 # Unit test / coverage reports

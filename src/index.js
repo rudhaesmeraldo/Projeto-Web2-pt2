@@ -1,16 +1,30 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const multer = require('multer'); // Para lidar com uploads de arquivos
+const multer = require('multer'); 
+const path = require('path');
 const { users } = require('./users');
-const authMiddleware = require('./authMiddleware');
-const restrictAccessMiddleware = require('./restrictAccessMiddleware');
+const authMiddleware = require('./middlewares/authMiddleware');
+const restrictAccessMiddleware = require('./middlewares/restrictAccessMiddleware');
 const Laboratorio = require('./models/Laboratorio');
 const PDFDocument = require('pdfkit');
 const mongoose = require('mongoose');
+const fs = require('fs');
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/'); // pasta onde os arquivos serão salvos
+  },
+  filename: (req, file, cb) => {
+    const nomeArquivo = Date.now() + path.extname(file.originalname);
+    cb(null, nomeArquivo);
+  }
+});
+
+const upload = multer({ storage });
 
 require('dotenv').config();
-var db_password = ''
+var db_password = process.env.db_password || "admin"
 
 mongoose.connect(`mongodb+srv://admin:${db_password}@clusterweb2.oibcn39.mongodb.net/`, {
   useNewUrlParser: true,
@@ -25,11 +39,9 @@ mongoose.connect(`mongodb+srv://admin:${db_password}@clusterweb2.oibcn39.mongodb
 const app = express();
 app.use(express.json());
 app.use(restrictAccessMiddleware); 
+app.use('/uploads', express.static('uploads'));
 
 const SECRET = 'secret';
-
-// Configuração do Multer para upload de imagem
-//const upload = multer({ dest: 'uploads/' });
 
 // Home
 app.get('/', (req, res) => {
@@ -56,59 +68,84 @@ app.post('/logar', async (req, res) => {
 
 // Rota para cadastrar um novo laboratório
 // authMiddleware,
-app.post('/laboratorio/novo', async (req, res) => {
+app.post('/laboratorio/novo', upload.single('foto'), async (req, res) => {
   const { nome, descricao, capacidade } = req.body;
+  const foto = req.file ? req.file.path : null;
 
   if (!nome || !descricao || !capacidade) {
-    return res.status(400).json({ erro: 'Todos os campos são obrigatórios (exceto foto)' });
+    return res.status(400).json({ erro: 'Nome, descrição e capacidade são obrigatórios' });
   }
 
   try {
-    const novoLab = await Laboratorio.create({ nome, descricao, capacidade });
-    res.status(201).json({ mensagem: 'Laboratório salvo no MongoDB', laboratorio: novoLab });
+    const novoLab = await Laboratorio.create({ nome, descricao, capacidade, foto });
+    res.status(201).json({ mensagem: 'Laboratório cadastrado com foto', laboratorio: novoLab });
   } catch (err) {
     res.status(500).json({ erro: 'Erro ao salvar no banco de dados', detalhes: err.message });
   }
 });
 
+// DELETE /laboratorio/:id
+app.delete('/laboratorio/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deletado = await Laboratorio.findByIdAndDelete(id);
+
+    if (!deletado) {
+      return res.status(404).json({ erro: 'Laboratório não encontrado' });
+    }
+
+    res.json({ mensagem: 'Laboratório deletado com sucesso' });
+  } catch (err) {
+    console.error('Erro ao excluir laboratório:', err);
+    res.status(500).json({ erro: 'Erro ao excluir laboratório' });
+  }
+});
+
+
 app.get('/laboratorio/relatorio', async (req, res) => {
   try {
     const laboratorios = await Laboratorio.find();
 
-    const doc = new PDFDocument({ margin: 30, size: 'A4' });
-
-    // Definindo o cabeçalho HTTP para download
-    res.setHeader('Content-Disposition', 'attachment; filename="relatorio_laboratorios.pdf"');
+    const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename=relatorio.pdf');
 
-    // Conecta o PDF ao stream de resposta
     doc.pipe(res);
 
     doc.fontSize(18).text('Relatório de Laboratórios', { align: 'center' });
     doc.moveDown();
 
     for (const lab of laboratorios) {
+      doc.fontSize(12).text(`Id: ${lab.id}`)
       doc.fontSize(14).text(`Nome: ${lab.nome}`);
       doc.fontSize(12).text(`Descrição: ${lab.descricao}`);
       doc.text(`Capacidade: ${lab.capacidade}`);
+      doc.text('Foto:');
 
+      // Caminho absoluto da imagem
       if (lab.foto) {
-        try {
-          const response = await axios.get(lab.foto, { responseType: 'arraybuffer' });
-          const imageBuffer = Buffer.from(response.data, 'base64');
-          doc.image(imageBuffer, { fit: [250, 150] });
-        } catch (error) {
-          doc.text('Erro ao carregar imagem');
+        const caminhoImagem = path.resolve(__dirname, lab.foto);
+        if (fs.existsSync(caminhoImagem)) {
+          doc.image(caminhoImagem, {
+            width: 200,
+            fit: [250, 250],
+            align: 'left'
+          });
+        } else {
+          doc.text('[Imagem não encontrada]');
         }
       }
 
-      doc.moveDown(2);
+      // Linha divisória
+      doc.moveDown();
+      doc.text('-------------------------------');
+      doc.moveDown();
     }
 
     doc.end();
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ erro: 'Erro ao gerar o relatório', detalhes: err.message });
+    console.error('Erro ao gerar relatório:', err);
+    res.status(500).json({ erro: 'Erro ao gerar relatório' });
   }
 });
 

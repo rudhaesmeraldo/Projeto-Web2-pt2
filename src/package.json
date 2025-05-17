@@ -2,7 +2,7 @@
   "name": "projeto-web2-pt2",
   "version": "1.0.0",
   "description": "| [<img loading=\"lazy\" src=\"https://avatars.githubusercontent.com/u/106767229?s=400&u=d91f527c50979c457174cc70127a0411747c70e5&v=4\" width=115><br><sub>Nicolas Ferreira</sub>](https://github.com/Niccofs) | [<img loading=\"lazy\" src=\"https://avatars.githubusercontent.com/u/100231973?v=4\" width=115><br><sub>Rudhá Esmeraldo</sub>](https://github.com/rudhaesmeraldo) |\r | :---: | :---: |",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
     "test": "node index.js",
     "dev": "nodemon index.js"
@@ -24,8 +24,10 @@
     "express": "^5.1.0",
     "fs": "^0.0.1-security",
     "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.15.0",
     "multer": "^1.4.5-lts.2",
     "nodemon": "^3.1.10",
-    "path": "^0.12.7"
+    "path": "^0.12.7",
+    "pdfkit": "^0.17.1"
   }
 }
