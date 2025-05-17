@@ -140,6 +140,7 @@
     "semver": "^7.7.1",
     "send": "^1.2.0",
     "serve-static": "^2.2.0",
+    "serverless-http": "^3.2.0",
     "setprototypeof": "^1.2.0",
     "side-channel": "^1.1.0",
     "side-channel-list": "^1.0.0",
@@ -172,7 +173,6 @@
     "wrappy": "^1.0.2",
     "xtend": "^4.0.2"
   },
-  "devDependencies": {},
   "scripts": {
     "start": "node api/index.js",
     "dev": "nodemon api/index.js"

@@ -4,13 +4,14 @@ const bcrypt = require('bcryptjs');
 const multer = require('multer'); 
 const path = require('path');
 const axios = require('axios')
-const { users } = require('./users');
-const authMiddleware = require('./middlewares/authMiddleware');
-const restrictAccessMiddleware = require('./middlewares/restrictAccessMiddleware');
+const { users } = require('../users');
+const authMiddleware = require('../middlewares/authMiddleware');
+const restrictAccessMiddleware = require('../middlewares/restrictAccessMiddleware');
 const Laboratorio = require('../models/Laboratorio');
 const PDFDocument = require('pdfkit');
 const mongoose = require('mongoose');
 const fs = require('fs');
+const serverless = require('serverless-http');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -25,7 +26,6 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 require('dotenv').config();
-const PORT = process.env.PORT || 3000;
 const SECRET = process.env.JWT_SECRET || 'secret';
 const DB_PASSWORD = process.env.DB_PASSWORD || 'admin';
 
@@ -43,16 +43,16 @@ const app = express();
 
 app.use(express.json());
 app.use(restrictAccessMiddleware); 
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Home
-app.get('/', (req, res) => {
+app.get('/api', (req, res) => {
   res.send('🚀 Bem-vindo à API de Gerenciamento de Salas!');
 });
 
 
 // Rota de login
-app.post('/logar', async (req, res) => {
+app.post('/api/logar', async (req, res) => {
   const { email, senha } = req.body;
 
   const usuario = users.find(u => u.email === email);
@@ -67,7 +67,7 @@ app.post('/logar', async (req, res) => {
 
 // Rota para cadastrar um novo laboratório
 // authMiddleware,
-app.post('/laboratorio/novo', authMiddleware, upload.single('foto'), async (req, res) => {
+app.post('/api/laboratorio/novo', authMiddleware, upload.single('foto'), async (req, res) => {
   const { nome, descricao, capacidade } = req.body;
   const foto = req.file ? req.file.path : null;
 
@@ -84,7 +84,7 @@ app.post('/laboratorio/novo', authMiddleware, upload.single('foto'), async (req,
 });
 
 // DELETE /laboratorio/:id
-app.delete('/laboratorio/:id', authMiddleware, async (req, res) => {
+app.delete('/api/laboratorio/:id', authMiddleware, async (req, res) => {
   try {
     const { id } = req.params;
     const deletado = await Laboratorio.findByIdAndDelete(id);
@@ -101,7 +101,7 @@ app.delete('/laboratorio/:id', authMiddleware, async (req, res) => {
 });
 
 
-app.get('/laboratorio/relatorio', authMiddleware, async (req, res) => {
+app.get('/api/laboratorio/relatorio', authMiddleware, async (req, res) => {
   try {
     const laboratorios = await Laboratorio.find();
 
@@ -151,3 +151,8 @@ app.get('/laboratorio/relatorio', authMiddleware, async (req, res) => {
 // Apenas para tests locais
 
 app.listen(3000, () => console.log('Servidor rodando na porta 3000'));
+
+// vercel
+
+// module.exports = app;
+// module.exports.handler = serverless(app); 
