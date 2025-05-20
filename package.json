@@ -174,16 +174,12 @@
     "xtend": "^4.0.2"
   },
   "scripts": {
-    "start": "node api/index.js",
-    "dev": "nodemon api/index.js",
-    "test": "jest --passWithNoTests"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "generate-keys": "node utils/generate-keys.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "devDependencies": {
-    "jest": "^29.7.0",
-    "supertest": "^7.1.1"
-  }
+  "description": ""
 }
