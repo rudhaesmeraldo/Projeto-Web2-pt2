@@ -8,7 +8,7 @@
 
 ---
 
-## Estrutura de Pastas do Código
+## 📁 Estrutura de Pastas do Código
 
 A estrutura de pastas é organizada para refletir a separação de responsabilidades e facilitar a manutenção do código:
 
@@ -49,17 +49,20 @@ src/
 - **Cloudinary**
 - **Jest**
 - **Docker**
+  
 ---
-## Rota GET /api
+
+## 🚀 Rota GET /api
+
 Retorna "🚀 Bem-vindo à API de Gerenciamento de Salas!", servindo como teste primário de funcionamento da API.
 
 ---
 
-## Rota POST /api/cadastrar
+## 📝 Rota POST /api/cadastrar
 
 Cadastra um usuário no mongodb recebendo nome, email e senha
 
-### Exemplo de Entrada
+### 📥 Exemplo de Entrada
 
 ```
 {
@@ -69,7 +72,7 @@ Cadastra um usuário no mongodb recebendo nome, email e senha
 }
 ```
 
-### Saída
+### 📤 Saída
 
 ```
 {
@@ -78,11 +81,11 @@ Cadastra um usuário no mongodb recebendo nome, email e senha
 ```
 ---
 
-## Rota POST /logar
+## 🔐 Rota POST /logar
 
 Loga um usuário já cadastrado anteriormente para gera um token via jwt
 
-### Exemplo de Entrada
+### 📥 Exemplo de Entrada
 ```
 {
   "email": "admin@teste.com",
@@ -90,7 +93,7 @@ Loga um usuário já cadastrado anteriormente para gera um token via jwt
 }
 ```
 
-### Saída
+### 📤 Saída
 
 ```
 {
@@ -98,3 +101,9 @@ Loga um usuário já cadastrado anteriormente para gera um token via jwt
 }
 ```
 ---
+
+### 🌐 Link para o Vercel
+
+```
+https://ideal-googles.vercel.app/
+```
